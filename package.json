@@ -1,0 +1,19 @@
+{
+  "name": "@rodriguez-diane/reflection-widgets",
+  "version": "1.0.0",
+  "description": "A collection of widgets for reflection exercises.",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node api/index.js",
+    "build": "echo 'No build step defined.'"
+  },
+  "keywords": [
+    "reflection",
+    "widgets",
+    "vercel"
+  ],
+  "author": "rodriguez-diane",
+  "license": "MIT",
+  "dependencies": {}
+}

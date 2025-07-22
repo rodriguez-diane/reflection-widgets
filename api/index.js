@@ -1,0 +1,6 @@
+// api/index.js
+// Example API handler
+
+export default function handler(req, res) {
+  res.status(200).json({ message: "Hello from the API!" });
+}

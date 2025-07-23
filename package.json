@@ -17,7 +17,9 @@
   "author": "rodriguez-diane",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@notionhq/client": "^2.2.1",
+    "google-auth-library": "^10.1.0",
     "openai": "^4.25.0"
   }
 }

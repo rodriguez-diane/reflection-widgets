@@ -2,25 +2,24 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
   try {
-    // Read the base64 encoded JSON string from the environment variable
-    const keyBase64 = process.env.GEMIN_KEY_BASE64;
-    if (!keyBase64) throw new Error("Missing GEMIN_KEY_BASE64 environment variable");
+    // Retrieve the base64-encoded API key from the environment variable
+    const apiKeyBase64 = process.env.GEMINI_API_KEY;
+    if (!apiKeyBase64) throw new Error("Missing GEMINI_API_KEY environment variable");
 
     // Decode the base64 key and parse it
-    const keyJson = Buffer.from(keyBase64, "base64").toString("utf-8");
-    const credentials = JSON.parse(keyJson);
+    const decodedKey = Buffer.from(apiKeyBase64, "base64").toString("utf-8");
+    
+    const genAI = new GoogleGenerativeAI({ api_key: decodedKey });
 
-    // Initialize the Gemini client with the API key from credentials
-    const genAI = new GoogleGenerativeAI(credentials.api_key); // Adjust accordingly if necessary
+    // Define the prompt for Gemini
+    const prompt = "Summarize and synthesize reflection data from Notion..."; // Replace with actual prompt
 
-    // Define the prompt
-    const prompt = "Summarize and synthesize reflection data from Notion...";
-
-    // Generate the content
-    const result = await genAI.getGenerativeModel({ model: "gemini-pro" }).generateContent(prompt);
+    // Generate content with Gemini API
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    // Return the generated synthesis
+    // Return the generated content
     res.status(200).json({ synthesis: text });
   } catch (error) {
     console.error("Synthesis API error:", error);

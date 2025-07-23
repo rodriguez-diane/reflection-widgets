@@ -2,6 +2,7 @@
   "name": "@rodriguez-diane/reflection-widgets",
   "version": "1.0.0",
   "description": "A collection of widgets for reflection exercises.",
+  "type": "module",
   "main": "api/index.js",
   "scripts": {
     "dev": "vercel dev",
@@ -15,5 +16,8 @@
   ],
   "author": "rodriguez-diane",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "@notionhq/client": "^2.2.1",
+    "openai": "^4.25.0"
+  }
 }

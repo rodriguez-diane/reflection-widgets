@@ -1,65 +1,26 @@
 // /api/synthesis.js
-import { Client } from '@notionhq/client';
-import OpenAI from 'openai';
-
-const notion = new Client({ auth: process.env.NOTION_TOKEN });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Only GET supported' });
-  }
-
   try {
-    const databaseId = process.env.DATABASE_ID;
-    if (!databaseId || !process.env.NOTION_TOKEN || !process.env.OPENAI_API_KEY) {
-      throw new Error('Missing required environment variables.');
-    }
+    const keyBase64 = process.env.GEMIN_KEY_BASE64;
+    if (!keyBase64) throw new Error("Missing GEMIN_KEY_BASE64 environment variable");
 
-    // Query Notion database
-    const response = await notion.databases.query({
-      database_id: databaseId,
-      filter: {
-        or: [
-          {
-            property: 'Cog',
-            rich_text: { is_not_empty: true }
-          },
-          {
-            property: 'Reflection',
-            rich_text: { is_not_empty: true }
-          }
-        ]
-      }
-    });
+    const keyJson = Buffer.from(keyBase64, "base64").toString("utf-8");
+    const credentials = JSON.parse(keyJson);
 
-    const entries = response.results.map((page) => {
-      const cog = page.properties.Cog?.rich_text?.[0]?.plain_text || '';
-      const reflection = page.properties.Reflection?.rich_text?.[0]?.plain_text || '';
-      return `Cog: ${cog}\nReflection: ${reflection}`;
-    });
+    const genAI = new GoogleGenerativeAI(credentials.api_key);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    if (entries.length === 0) {
-      return res.status(200).json({ synthesis: 'No data found in Notion database.' });
-    }
+    // Replace this with actual Notion data fetching
+    const prompt = "Summarize and synthesize reflection data from Notion...";
 
-    const prompt = `
-Based on the following weekly reflections, synthesize any patterns in Cogs (struggles) and what was learned (Reflections). Be concise and insightful.
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-Entries:
-${entries.join('\n\n')}
-`;
-
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-4o'
-    });
-
-    const synthesis = completion.choices?.[0]?.message?.content || 'No synthesis generated.';
-    res.status(200).json({ synthesis });
-
+    res.status(200).json({ synthesis: text });
   } catch (error) {
-    console.error('❌ Synthesis Error:', error);
-    res.status(500).json({ error: error.message || 'Unknown error occurred' });
+    console.error("Synthesis API error:", error);
+    res.status(500).json({ error: error.message });
   }
 }

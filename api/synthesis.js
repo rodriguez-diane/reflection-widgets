@@ -6,11 +6,17 @@ const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Only GET supported' });
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Only GET supported' });
+  }
 
   try {
     const databaseId = process.env.DATABASE_ID;
+    if (!databaseId || !process.env.NOTION_TOKEN || !process.env.OPENAI_API_KEY) {
+      throw new Error('Missing required environment variables.');
+    }
 
+    // Query Notion database
     const response = await notion.databases.query({
       database_id: databaseId,
       filter: {
@@ -33,6 +39,10 @@ export default async function handler(req, res) {
       return `Cog: ${cog}\nReflection: ${reflection}`;
     });
 
+    if (entries.length === 0) {
+      return res.status(200).json({ synthesis: 'No data found in Notion database.' });
+    }
+
     const prompt = `
 Based on the following weekly reflections, synthesize any patterns in Cogs (struggles) and what was learned (Reflections). Be concise and insightful.
 
@@ -45,11 +55,11 @@ ${entries.join('\n\n')}
       model: 'gpt-4o'
     });
 
-    const synthesis = completion.choices[0].message.content;
+    const synthesis = completion.choices?.[0]?.message?.content || 'No synthesis generated.';
     res.status(200).json({ synthesis });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to generate synthesis from Notion & OpenAI' });
+    console.error('❌ Synthesis Error:', error);
+    res.status(500).json({ error: error.message || 'Unknown error occurred' });
   }
 }

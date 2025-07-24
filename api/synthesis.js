@@ -1,5 +1,5 @@
-const cohere = require('cohere-ai'); // Install Cohere SDK
-cohere.init(process.env.COHERE_API_KEY); // Access the API Key from Vercel's environment variable
+const cohere = require('cohere-ai'); // Use Cohere SDK
+cohere.init(process.env.COHERE_API_KEY); // Use your Cohere API key securely from Vercel environment variables
 
 async function generateSynthesis(cogData, reflectionData) {
   try {
@@ -17,14 +17,11 @@ async function generateSynthesis(cogData, reflectionData) {
 }
 
 function fallbackSynthesis(cogData, reflectionData) {
-  // Example of basic keyword/text analysis
+  // Basic fallback logic (simple text analysis)
   const cogWords = cogData.split(" ");
   const reflectionWords = reflectionData.split(" ");
-  
   const commonWords = cogWords.filter(word => reflectionWords.includes(word));
-  const synthesis = `Struggles involved: ${commonWords.join(", ")}. Reflections: Continue focusing on these areas.`;
-  
-  return synthesis;
+  return `Struggles involved: ${commonWords.join(", ")}. Reflections: Focus on these areas.`;
 }
 
 module.exports = generateSynthesis;

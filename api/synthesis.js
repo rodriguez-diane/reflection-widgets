@@ -1,28 +1,30 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+const cohere = require('cohere-ai'); // Install Cohere SDK
+cohere.init(process.env.COHERE_API_KEY); // Access the API Key from Vercel's environment variable
 
-export default async function handler(req, res) {
+async function generateSynthesis(cogData, reflectionData) {
   try {
-    // Retrieve the base64-encoded API key from the environment variable
-    const apiKeyBase64 = process.env.GEMINI_API_KEY;
-    if (!apiKeyBase64) throw new Error("Missing GEMINI_API_KEY environment variable");
-
-    // Decode the base64 key and parse it
-    const decodedKey = Buffer.from(apiKeyBase64, "base64").toString("utf-8");
-    
-    const genAI = new GoogleGenerativeAI({ api_key: decodedKey });
-
-    // Define the prompt for Gemini
-    const prompt = "Summarize and synthesize reflection data from Notion..."; // Replace with actual prompt
-
-    // Generate content with Gemini API
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    // Return the generated content
-    res.status(200).json({ synthesis: text });
+    const response = await cohere.generate({
+      model: 'xlarge', // You can use other models like 'medium' if needed
+      prompt: `Synthesize the following insights:\nCog: ${cogData}\nReflection: ${reflectionData}\n\nSummary:`,
+      max_tokens: 100,
+    });
+    return response.body.generations[0].text.trim();
   } catch (error) {
-    console.error("Synthesis API error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Cohere API error:", error);
+    // Fallback logic
+    return fallbackSynthesis(cogData, reflectionData);
   }
 }
+
+function fallbackSynthesis(cogData, reflectionData) {
+  // Example of basic keyword/text analysis
+  const cogWords = cogData.split(" ");
+  const reflectionWords = reflectionData.split(" ");
+  
+  const commonWords = cogWords.filter(word => reflectionWords.includes(word));
+  const synthesis = `Struggles involved: ${commonWords.join(", ")}. Reflections: Continue focusing on these areas.`;
+  
+  return synthesis;
+}
+
+module.exports = generateSynthesis;
